@@ -11,6 +11,30 @@
   let startX = 0;
   let locked = false;
 
+  function loadSlide(index) {
+    const slide = slides[index];
+    if (!slide) return;
+    slide.querySelectorAll("img[data-src]").forEach((image) => {
+      if (!image.getAttribute("src")) {
+        image.setAttribute("src", image.dataset.src);
+      }
+    });
+  }
+
+  function preloadAround(index) {
+    loadSlide(index);
+    loadSlide(index + 1);
+    loadSlide(index - 1);
+  }
+
+  function schedulePreload(index) {
+    if ("requestIdleCallback" in window) {
+      window.requestIdleCallback(() => preloadAround(index), { timeout: 1200 });
+      return;
+    }
+    window.setTimeout(() => preloadAround(index), 240);
+  }
+
   const dots = slides.map((_, index) => {
     const dot = document.createElement("span");
     dot.className = "dot";
@@ -20,6 +44,7 @@
   });
 
   function render() {
+    loadSlide(active);
     slides.forEach((slide, index) => {
       slide.classList.toggle("is-active", index === active);
       slide.classList.toggle("is-prev", index < active);
@@ -28,6 +53,7 @@
     dots.forEach((dot, index) => dot.classList.toggle("is-active", index === active));
     currentPage.textContent = String(active + 1);
     swipeTip.classList.toggle("is-hidden", active === total - 1);
+    schedulePreload(active);
   }
 
   function goTo(index) {
