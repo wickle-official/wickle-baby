@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="format-detection" content="telephone=no" />
+    <title>WICKLE 品牌手册</title>
+    <meta name="description" content="WICKLE 品牌手册在线阅读" />
+    <link rel="preload" as="image" href="./pages/page-01.jpg" fetchpriority="high" />
+    <style>
+      :root {
+        color-scheme: light;
+        --paper: #f5f0e5;
+        --ink: #4d4d52;
+        --line: rgba(88, 83, 74, 0.16);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        background: var(--paper);
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      }
+
+      .reader {
+        width: min(100%, 980px);
+        margin: 0 auto;
+        padding: max(16px, env(safe-area-inset-top)) 10px calc(28px + env(safe-area-inset-bottom));
+      }
+
+      .reader-bar {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 2px 12px;
+        background: linear-gradient(180deg, var(--paper) 0%, rgba(245, 240, 229, 0.94) 78%, rgba(245, 240, 229, 0) 100%);
+        backdrop-filter: blur(10px);
+      }
+
+      .reader-title {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: 0;
+      }
+
+      .reader-count {
+        flex: 0 0 auto;
+        min-width: 56px;
+        text-align: right;
+        font-size: 13px;
+        font-variant-numeric: tabular-nums;
+        color: rgba(77, 77, 82, 0.72);
+      }
+
+      .progress {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 10;
+        width: 100%;
+        height: 3px;
+        background: rgba(90, 82, 68, 0.12);
+      }
+
+      .progress span {
+        display: block;
+        width: 0;
+        height: 100%;
+        background: #62bec4;
+        transition: width 180ms ease;
+      }
+
+      .pages {
+        display: grid;
+        gap: 12px;
+      }
+
+      .page {
+        position: relative;
+        overflow: hidden;
+        aspect-ratio: 16 / 9;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.62);
+        box-shadow: 0 10px 28px rgba(77, 68, 52, 0.08);
+      }
+
+      .page img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .page::after {
+        content: attr(data-page);
+        position: absolute;
+        right: 8px;
+        bottom: 7px;
+        padding: 3px 7px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.72);
+        color: rgba(77, 77, 82, 0.62);
+        font-size: 11px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      @media (min-width: 720px) {
+        .reader {
+          padding-right: 18px;
+          padding-left: 18px;
+        }
+
+        .reader-title {
+          font-size: 17px;
+        }
+
+        .pages {
+          gap: 18px;
+        }
+
+        .page {
+          border-radius: 8px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="progress" aria-hidden="true"><span id="progressFill"></span></div>
+    <main class="reader" aria-label="WICKLE 品牌手册在线阅读">
+      <header class="reader-bar">
+        <h1 class="reader-title">WICKLE 品牌手册</h1>
+        <div class="reader-count"><span id="currentPage">1</span>/41</div>
+      </header>
+      <section class="pages" id="pages"></section>
+    </main>
+
+    <script>
+      const pageTotal = 41;
+      const pages = document.getElementById("pages");
+      const currentPage = document.getElementById("currentPage");
+      const progressFill = document.getElementById("progressFill");
+      const imagePath = (index) => `./pages/page-${String(index).padStart(2, "0")}.jpg`;
+
+      for (let index = 1; index <= pageTotal; index += 1) {
+        const figure = document.createElement("figure");
+        const image = document.createElement("img");
+        figure.className = "page";
+        figure.dataset.page = index;
+        if (index <= 2) {
+          image.src = imagePath(index);
+        } else {
+          image.dataset.src = imagePath(index);
+        }
+        image.alt = `WICKLE 品牌手册第 ${index} 页`;
+        image.width = 1280;
+        image.height = 720;
+        image.decoding = "async";
+        image.loading = index <= 2 ? "eager" : "lazy";
+        if (index === 1) image.fetchPriority = "high";
+        figure.appendChild(image);
+        pages.appendChild(figure);
+      }
+
+      const loadImage = (image) => {
+        if (!image.dataset.src) return;
+        image.src = image.dataset.src;
+        image.removeAttribute("data-src");
+      };
+
+      const loadObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            const image = entry.target.querySelector("img");
+            loadImage(image);
+            loadObserver.unobserve(entry.target);
+          });
+        },
+        { rootMargin: "1200px 0px" },
+      );
+
+      document.querySelectorAll(".page").forEach((page, index) => {
+        if (index > 1) loadObserver.observe(page);
+      });
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          const visible = entries
+            .filter((entry) => entry.isIntersecting)
+            .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+          if (!visible) return;
+          const page = Number(visible.target.dataset.page);
+          currentPage.textContent = page;
+          progressFill.style.width = `${(page / pageTotal) * 100}%`;
+        },
+        { threshold: [0.45, 0.6, 0.75] },
+      );
+
+      document.querySelectorAll(".page").forEach((page) => observer.observe(page));
+    </script>
+  </body>
+</html>
