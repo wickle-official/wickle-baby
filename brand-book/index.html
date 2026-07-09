@@ -8,7 +8,7 @@
     <meta name="format-detection" content="telephone=no" />
     <title>WICKLE 品牌手册</title>
     <meta name="description" content="WICKLE 品牌手册在线阅读" />
-    <link rel="preload" as="image" href="./pages/page-01.jpg" fetchpriority="high" />
+    <link rel="preload" as="image" href="./pages-lite/page-01.jpg" fetchpriority="high" />
     <style>
       :root {
         color-scheme: light;
@@ -231,18 +231,19 @@
       const progressFill = document.getElementById("progressFill");
       const prevBtn = document.getElementById("prevBtn");
       const nextBtn = document.getElementById("nextBtn");
-      const imagePath = (index) => `./pages/page-${String(index).padStart(2, "0")}.jpg`;
+      const imagePath = (index) => `./pages-lite/page-${String(index).padStart(2, "0")}.jpg`;
       let activeIndex = 0;
       let scrollFrame = 0;
       let touchStartX = 0;
       let touchStartY = 0;
+      let preloadTimer = 0;
 
       for (let index = 1; index <= pageTotal; index += 1) {
         const figure = document.createElement("figure");
         const image = document.createElement("img");
         figure.className = "page";
         figure.dataset.page = index;
-        if (index <= 2) {
+        if (index === 1) {
           image.src = imagePath(index);
         } else {
           image.dataset.src = imagePath(index);
@@ -251,7 +252,7 @@
         image.width = 1280;
         image.height = 720;
         image.decoding = "async";
-        image.loading = index <= 2 ? "eager" : "lazy";
+        image.loading = index === 1 ? "eager" : "lazy";
         if (index === 1) image.fetchPriority = "high";
         figure.appendChild(image);
         pages.appendChild(figure);
@@ -265,12 +266,18 @@
 
       const pageElements = Array.from(document.querySelectorAll(".page"));
 
-      const loadAround = (index) => {
-        for (let offset = -1; offset <= 2; offset += 1) {
-          const page = pageElements[index + offset];
-          if (!page) continue;
-          loadImage(page.querySelector("img"));
-        }
+      const loadAt = (index) => {
+        const page = pageElements[index];
+        if (!page) return;
+        loadImage(page.querySelector("img"));
+      };
+
+      const preloadNear = (index) => {
+        window.clearTimeout(preloadTimer);
+        preloadTimer = window.setTimeout(() => {
+          loadAt(index + 1);
+          loadAt(index - 1);
+        }, 1200);
       };
 
       const setActive = (index) => {
@@ -279,7 +286,8 @@
         progressFill.style.width = `${((activeIndex + 1) / pageTotal) * 100}%`;
         prevBtn.disabled = activeIndex === 0;
         nextBtn.disabled = activeIndex === pageTotal - 1;
-        loadAround(activeIndex);
+        loadAt(activeIndex);
+        preloadNear(activeIndex);
       };
 
       const goTo = (index) => {
